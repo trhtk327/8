@@ -1,98 +1,90 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="he">
 <head>
-  <meta charset="UTF-8">
-  <title>יוצר אפליקציה מקובץ HTML</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>יוצר ZIP לאפליקציה</title>
   <style>
     body {
-      font-family: "Segoe UI", sans-serif;
-      background: linear-gradient(145deg, #0f2027, #203a43, #2c5364);
-      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
       text-align: center;
-      padding: 40px;
     }
-    h1 {
-      font-size: 2em;
-      margin-bottom: 30px;
-    }
-    input[type="file"] {
-      padding: 10px;
-      font-size: 1em;
-      margin-bottom: 20px;
+    input, button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
     }
     button {
-      background: #00c6ff;
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      font-size: 1.1em;
-      border-radius: 12px;
+      background-color: #00c6ff;
+      color: #fff;
       cursor: pointer;
-      transition: 0.3s;
     }
     button:hover {
-      background: #0072ff;
-    }
-    #status {
-      margin-top: 20px;
-      font-size: 1em;
+      background-color: #0072ff;
     }
   </style>
 </head>
 <body>
-  <h1>✨ יצירת אפליקציה מקובץ HTML</h1>
-  <input type="file" id="htmlFile" accept=".html">
-  <br>
-  <button onclick="createZip()">צור קובץ APK ZIP</button>
-  <div id="status"></div>
+  <div class="container">
+    <h2>העלה קובץ HTML וקבל ZIP</h2>
+    <input type="file" id="htmlFile" accept=".html" />
+    <br />
+    <button onclick="createZip()">צור ZIP</button>
+  </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
   <script>
     async function createZip() {
       const fileInput = document.getElementById('htmlFile');
-      const status = document.getElementById('status');
-
-      if (!fileInput.files.length) {
-        status.innerText = "אנא בחר קובץ HTML תחילה.";
-        return;
-      }
+      if (!fileInput.files.length) return alert('אנא בחר קובץ HTML');
 
       const htmlFile = fileInput.files[0];
       const htmlContent = await htmlFile.text();
 
       const zip = new JSZip();
-      const appFolder = zip.folder("app");
+      zip.file("index.html", htmlContent);
+      zip.file("style.css", `
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Segoe UI', sans-serif;
+          background: #111;
+          color: #eee;
+        }
+        h1 {
+          color: #00c6ff;
+        }
+      `);
+      zip.file("script.js", `
+        document.addEventListener('DOMContentLoaded', () => {
+          console.log("האפליקציה מוכנה!");
+        });
+      `);
 
-      // אייקון דמה (ניתן להחליף)
-      const iconBase64 = "iVBORw0KGgoAAAANSUhEUgAAADIA..."; // נחתוך כדי לקצר
-
-      appFolder.file("index.html", htmlContent);
-
-      zip.file("manifest.json", JSON.stringify({
-        name: "אפליקציה מותאמת",
-        short_name: "אפליקציה",
-        start_url: "app/index.html",
-        display: "standalone",
-        background_color: "#000000",
-        theme_color: "#0f2027",
-        icons: [{
-          src: "icon.png",
-          sizes: "512x512",
-          type: "image/png"
-        }]
-      }, null, 2));
-
-      zip.file("icon.png", iconBase64, {base64: true});
-
-      const blob = await zip.generateAsync({type: "blob"});
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = "apk-ready.zip";
-      link.click();
-
-      status.innerText = "✅ קובץ ZIP נוצר בהצלחה!";
+      const content = await zip.generateAsync({ type: "blob" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(content);
+      a.download = "app_package.zip";
+      a.click();
     }
   </script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </body>
 </html>
